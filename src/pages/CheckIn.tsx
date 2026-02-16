@@ -36,7 +36,26 @@ const CheckIn = () => {
   const handleAnswer = useCallback((value: string | number | boolean) => {
     if (!currentQuestion) return;
     setAnswers(prev => ({ ...prev, [currentQuestion.id]: value }));
-  }, [currentQuestion]);
+
+    // Auto-advance for yesno and scale questions
+    if (currentQuestion.type === 'yesno' || currentQuestion.type === 'scale') {
+      setTimeout(() => {
+        // Save and advance
+        saveAnswer(getTodayString(), {
+          questionId: currentQuestion.id,
+          value,
+          timestamp: new Date().toISOString(),
+        });
+
+        if (currentIndex < questions.length - 1) {
+          setDirection('forward');
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          navigate('/');
+        }
+      }, 400);
+    }
+  }, [currentQuestion, currentIndex, questions.length, navigate]);
 
   const goNext = () => {
     if (!currentQuestion) return;
