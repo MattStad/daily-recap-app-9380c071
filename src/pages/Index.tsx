@@ -70,7 +70,7 @@ const Index = () => {
 
       {/* Hero card */}
       <div className="px-5 pt-2">
-        <div className="gradient-primary rounded-2xl p-5 relative overflow-hidden">
+        <div className="bg-primary rounded-2xl p-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 62% 42%))' }}>
           {/* Streak badge */}
           {streak > 0 && (
             <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-accent rounded-full px-3 py-1.5">
