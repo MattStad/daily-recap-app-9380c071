@@ -33,6 +33,22 @@ export function removeUserQuestion(questionId: string) {
   setUserQuestions(current);
 }
 
+export function reorderUserQuestions(fromIndex: number, toIndex: number) {
+  const current = getUserQuestions();
+  const [moved] = current.splice(fromIndex, 1);
+  current.splice(toIndex, 0, moved);
+  setUserQuestions(current);
+}
+
+export function updateCustomQuestion(questionId: string, updates: Partial<Question>) {
+  const current = getCustomQuestions();
+  const idx = current.findIndex(q => q.id === questionId);
+  if (idx >= 0) {
+    current[idx] = { ...current[idx], ...updates };
+    localStorage.setItem(STORAGE_KEYS.customQuestions, JSON.stringify(current));
+  }
+}
+
 export function updateQuestionChartType(questionId: string, chartType: 'line' | 'pie') {
   const current = getUserQuestions();
   const q = current.find(q => q.questionId === questionId);

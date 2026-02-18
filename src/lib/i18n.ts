@@ -45,6 +45,49 @@ const translations = {
     'type.scale': 'Skala',
     'type.freetext': 'Freitext',
 
+    // Motivation messages after check-in
+    'motivation.1': 'Stark! Du investierst in dich selbst 💪',
+    'motivation.2': 'Jeder Tag zählt – und heute hast du geliefert! 🔥',
+    'motivation.3': 'Kleine Schritte, große Wirkung. Weiter so! 🚀',
+    'motivation.4': 'Du bist auf dem richtigen Weg! ✨',
+    'motivation.5': 'Selbstreflexion ist eine Superkraft 🦸',
+    'motivation.6': 'Konsistenz schlägt Perfektion. Immer. 🎯',
+    'motivation.7': 'Heute erledigt – morgen stolz! 🏆',
+    'motivation.8': 'Dein zukünftiges Ich wird dir danken 🙌',
+
+    // Home hooks
+    'hook.noCheckin': 'Heute noch kein Check-in gemacht 👀',
+    'hook.streak': 'Du bist auf einer {n}-Tage-Streak – bleib dran! 🔥',
+    'hook.quickCheckin': 'Nur 60 Sekunden bis zum Tagesabschluss ⚡',
+    'hook.continueCheckin': 'Fast geschafft – noch {n} Fragen offen',
+
+    // Week visualization
+    'week.missed': 'Verpasst',
+    'week.completed': 'Erledigt',
+    'week.upcoming': 'Kommt noch',
+
+    // Templates
+    'templates': 'Vorlagen entdecken',
+    'templates.title': 'Routine-Vorlagen',
+    'templates.subtitle': 'Fertige Fragen-Packs für verschiedene Ziele',
+    'template.fitness': '💪 Fitness Pack',
+    'template.fitness.desc': 'Training, Bewegung & körperliches Wohlbefinden',
+    'template.study': '📚 Study Pack',
+    'template.study.desc': 'Lernen, Lesen & persönliche Entwicklung',
+    'template.mindset': '🧘 Mindset Pack',
+    'template.mindset.desc': 'Meditation, Dankbarkeit & mentale Stärke',
+    'template.sleep': '😴 Sleep Pack',
+    'template.sleep.desc': 'Schlafqualität & Erholungsroutine',
+
+    // Edit question
+    'editQuestion': 'Frage bearbeiten',
+    'save': 'Speichern',
+
+    // Insights
+    'insight.weeklyRate': 'Du hast diese Woche {n}/{total} Check-ins gemacht.',
+    'insight.improving': '{name} steigt seit {n} Tagen.',
+    'insight.declining': '{name} sinkt seit {n} Tagen.',
+
     // Statistics
     'statistics': 'Statistiken',
     'statistics.subtitle': 'Dein Fortschritt im Überblick',
@@ -142,6 +185,44 @@ const translations = {
     'type.yesno': 'Yes/No',
     'type.scale': 'Scale',
     'type.freetext': 'Free text',
+
+    // Motivation
+    'motivation.1': 'Strong! You\'re investing in yourself 💪',
+    'motivation.2': 'Every day counts – and today you delivered! 🔥',
+    'motivation.3': 'Small steps, big impact. Keep going! 🚀',
+    'motivation.4': 'You\'re on the right track! ✨',
+    'motivation.5': 'Self-reflection is a superpower 🦸',
+    'motivation.6': 'Consistency beats perfection. Always. 🎯',
+    'motivation.7': 'Done today – proud tomorrow! 🏆',
+    'motivation.8': 'Your future self will thank you 🙌',
+
+    'hook.noCheckin': 'No check-in yet today 👀',
+    'hook.streak': 'You\'re on a {n}-day streak – keep it up! 🔥',
+    'hook.quickCheckin': 'Just 60 seconds to wrap up your day ⚡',
+    'hook.continueCheckin': 'Almost done – {n} questions left',
+
+    'week.missed': 'Missed',
+    'week.completed': 'Completed',
+    'week.upcoming': 'Upcoming',
+
+    'templates': 'Discover templates',
+    'templates.title': 'Routine Templates',
+    'templates.subtitle': 'Ready-made question packs for different goals',
+    'template.fitness': '💪 Fitness Pack',
+    'template.fitness.desc': 'Training, movement & physical well-being',
+    'template.study': '📚 Study Pack',
+    'template.study.desc': 'Learning, reading & personal development',
+    'template.mindset': '🧘 Mindset Pack',
+    'template.mindset.desc': 'Meditation, gratitude & mental strength',
+    'template.sleep': '😴 Sleep Pack',
+    'template.sleep.desc': 'Sleep quality & recovery routine',
+
+    'editQuestion': 'Edit question',
+    'save': 'Save',
+
+    'insight.weeklyRate': 'You completed {n}/{total} check-ins this week.',
+    'insight.improving': '{name} is rising for {n} days.',
+    'insight.declining': '{name} is declining for {n} days.',
 
     'statistics': 'Statistics',
     'statistics.subtitle': 'Your progress at a glance',

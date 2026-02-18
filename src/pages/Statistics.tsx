@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flame, Calendar, TrendingUp, Target, Clock } from 'lucide-react';
+import { ArrowLeft, Flame, Calendar, TrendingUp, Target, Clock, TrendingDown, Lightbulb } from 'lucide-react';
 import { Question, PREDEFINED_QUESTIONS } from '@/lib/questions';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -9,7 +9,7 @@ import {
 } from '@/lib/store';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  BarChart, Bar, Cell,
 } from 'recharts';
 
 const CHART_COLORS = ['hsl(174, 62%, 32%)', 'hsl(38, 92%, 50%)', 'hsl(152, 60%, 42%)', 'hsl(280, 60%, 55%)', 'hsl(350, 65%, 55%)'];
@@ -35,6 +35,52 @@ const Statistics = () => {
     }
     return Math.round((count / 30) * 100);
   }, []);
+
+  // Weekly rate insight
+  const weeklyInsight = useMemo(() => {
+    const entries = getAllEntries();
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      if (entries.find(e => e.date === dateStr)) count++;
+    }
+    const daysElapsed = Math.min(7, dayOfWeek === 0 ? 7 : dayOfWeek);
+    return { done: count, total: daysElapsed };
+  }, []);
+
+  // Trend insights
+  const trendInsights = useMemo(() => {
+    const insights: { text: string; type: 'up' | 'down' }[] = [];
+    userQuestions.forEach(uq => {
+      const q = allQuestions.find(qq => qq.id === uq.questionId);
+      if (!q || q.type === 'freetext') return;
+      const answers = getAnswersForQuestion(q.id);
+      if (answers.length < 3) return;
+      const recent = answers.slice(-5);
+      let trend = 0;
+      for (let i = 1; i < recent.length; i++) {
+        const curr = Number(recent[i].value);
+        const prev = Number(recent[i - 1].value);
+        trend += curr - prev;
+      }
+      if (Math.abs(trend) >= 2) {
+        const name = tQuestion(q.id, q.text).substring(0, 30);
+        insights.push({
+          text: trend > 0
+            ? (t('insight.improving') as string).replace('{name}', name).replace('{n}', String(recent.length))
+            : (t('insight.declining') as string).replace('{name}', name).replace('{n}', String(recent.length)),
+          type: trend > 0 ? 'up' : 'down',
+        });
+      }
+    });
+    return insights;
+  }, [userQuestions, allQuestions, t, tQuestion]);
 
   const activeQuestions = useMemo(() =>
     userQuestions
@@ -76,7 +122,7 @@ const Statistics = () => {
         </div>
       </div>
 
-      <div className="px-5 grid grid-cols-3 gap-2 mb-6">
+      <div className="px-5 grid grid-cols-3 gap-2 mb-4">
         <div className="bg-card rounded-xl shadow-card p-3 text-center">
           <Calendar className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
           <p className="text-xl font-bold text-foreground">{totalCheckIns}</p>
@@ -93,6 +139,26 @@ const Statistics = () => {
           <p className="text-[10px] text-muted-foreground">{t('thirtyDayRate')}</p>
         </div>
       </div>
+
+      {/* Insights */}
+      {(trendInsights.length > 0 || weeklyInsight.done > 0) && (
+        <div className="px-5 mb-4 space-y-2">
+          <div className="bg-card rounded-xl shadow-card p-3.5 flex items-start gap-3 border border-border/50">
+            <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-sm text-foreground">
+                {(t('insight.weeklyRate') as string).replace('{n}', String(weeklyInsight.done)).replace('{total}', String(weeklyInsight.total))}
+              </p>
+              {trendInsights.map((ins, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-sm">
+                  {ins.type === 'up' ? <TrendingUp className="w-3.5 h-3.5 text-primary" /> : <TrendingDown className="w-3.5 h-3.5 text-destructive" />}
+                  <span className="text-muted-foreground">{ins.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-5 pb-8">
         <h2 className="text-lg font-bold text-foreground mb-3">{t('trends')}</h2>
@@ -142,29 +208,44 @@ function QuestionStats({ question, chartType, onToggleChart, tQuestion, dateLoca
 function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: string; value: any }[]; chartType: 'line' | 'pie'; dateLocale: string; t: (k: string) => string }) {
   const yesCount = answers.filter(a => a.value === true).length;
   const noCount = answers.filter(a => a.value === false).length;
+
   if (chartType === 'pie') {
-    const data = [{ name: t('yes'), value: yesCount }, { name: t('no'), value: noCount }].filter(d => d.value > 0);
+    // Completion rate bar instead of pie
+    const total = yesCount + noCount;
+    const rate = total > 0 ? Math.round((yesCount / total) * 100) : 0;
     return (
-      <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart><Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-            {data.map((_, i) => <Cell key={i} fill={i === 0 ? CHART_COLORS[0] : CHART_COLORS[4]} />)}
-          </Pie><Legend /></PieChart>
-        </ResponsiveContainer>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('yes')}: {yesCount}</span>
+          <span className="font-bold text-foreground">{rate}%</span>
+          <span className="text-muted-foreground">{t('no')}: {noCount}</span>
+        </div>
+        <div className="h-3 bg-secondary rounded-full overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${rate}%`, background: CHART_COLORS[0] }} />
+        </div>
       </div>
     );
   }
-  const lineData = answers.map(a => ({ date: new Date(a.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }), value: a.value === true ? 1 : 0 }));
+
+  const barData = answers.slice(-14).map(a => ({
+    date: new Date(a.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }),
+    value: a.value === true ? 1 : 0,
+  }));
+
   return (
-    <div className="h-48">
+    <div className="h-40">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={lineData}>
+        <BarChart data={barData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-          <YAxis domain={[0, 1]} ticks={[0, 1]} tickFormatter={v => v === 1 ? t('yes') : t('no')} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+          <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+          <YAxis domain={[0, 1]} ticks={[0, 1]} tickFormatter={v => v === 1 ? '✓' : '✗'} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
           <Tooltip formatter={(v: number) => v === 1 ? t('yes') : t('no')} />
-          <Line type="stepAfter" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ fill: CHART_COLORS[0], r: 4 }} />
-        </LineChart>
+          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            {barData.map((entry, i) => (
+              <Cell key={i} fill={entry.value === 1 ? CHART_COLORS[0] : CHART_COLORS[4]} />
+            ))}
+          </Bar>
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );
@@ -172,28 +253,51 @@ function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: st
 
 function ScaleChart({ answers, chartType, min, max, dateLocale }: { answers: { date: string; value: any }[]; chartType: 'line' | 'pie'; min: number; max: number; dateLocale: string }) {
   if (chartType === 'pie') {
-    const counts: Record<number, number> = {};
-    answers.forEach(a => { const v = Number(a.value); counts[v] = (counts[v] || 0) + 1; });
-    const data = Object.entries(counts).map(([k, v]) => ({ name: k, value: v })).sort((a, b) => Number(a.name) - Number(b.name));
+    // Weekly average bar chart instead
+    const weeklyData: Record<string, { sum: number; count: number }> = {};
+    answers.forEach(a => {
+      const d = new Date(a.date);
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay());
+      const key = weekStart.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' });
+      if (!weeklyData[key]) weeklyData[key] = { sum: 0, count: 0 };
+      weeklyData[key].sum += Number(a.value);
+      weeklyData[key].count++;
+    });
+    const barData = Object.entries(weeklyData).slice(-8).map(([week, data]) => ({
+      week,
+      avg: Math.round((data.sum / data.count) * 10) / 10,
+    }));
+
     return (
-      <div className="h-48">
+      <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart><Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}>
-            {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-          </Pie><Legend /></PieChart>
+          <BarChart data={barData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+            <YAxis domain={[min, max]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+            <Tooltip />
+            <Bar dataKey="avg" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </div>
     );
   }
-  const lineData = answers.map(a => ({ date: new Date(a.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }), value: Number(a.value) }));
+
+  const lineData = answers.slice(-30).map(a => ({
+    date: new Date(a.date).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }),
+    value: Number(a.value),
+  }));
+
   return (
-    <div className="h-48">
+    <div className="h-40">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={lineData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+          <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
           <YAxis domain={[min, max]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-          <Tooltip /><Line type="monotone" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ fill: CHART_COLORS[0], r: 4 }} />
+          <Tooltip />
+          <Line type="monotone" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ fill: CHART_COLORS[0], r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

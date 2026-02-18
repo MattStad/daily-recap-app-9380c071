@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, Settings, Check, Flame, ListChecks } from 'lucide-react';
+import { BarChart3, Settings, Check, Flame, ListChecks, X } from 'lucide-react';
 import { getUserQuestions, getDayEntry, getTodayString, getCustomQuestions, getStreak, getTotalCheckIns, getAllEntries } from '@/lib/store';
-import { PREDEFINED_QUESTIONS } from '@/lib/questions';
+import { PREDEFINED_QUESTIONS, Question } from '@/lib/questions';
 import { useI18n } from '@/lib/i18n';
 
 const Index = () => {
@@ -13,7 +13,9 @@ const Index = () => {
   const [answeredToday, setAnsweredToday] = useState(0);
   const [streak, setStreak] = useState(0);
   const [totalCheckIns, setTotalCheckInsState] = useState(0);
-  const [weekData, setWeekData] = useState<{ day: string; date: number; done: boolean; isToday: boolean }[]>([]);
+  const [weekData, setWeekData] = useState<{ day: string; date: number; done: boolean; isToday: boolean; isPast: boolean; dateStr: string }[]>([]);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [dayAnswers, setDayAnswers] = useState<{ emoji: string; text: string; value: any }[]>([]);
 
   useEffect(() => {
     const uqs = getUserQuestions();
@@ -39,17 +41,51 @@ const Index = () => {
       d.setDate(monday.getDate() + i);
       const dateStr = d.toISOString().split('T')[0];
       const isToday = dateStr === getTodayString();
+      const isPast = d < today && !isToday;
       week.push({
         day: t(dayKeys[i]),
         date: d.getDate(),
         done: entryDates.has(dateStr),
         isToday,
+        isPast,
+        dateStr,
       });
     }
     setWeekData(week);
   }, [t]);
 
+  const handleDayClick = (dateStr: string, done: boolean) => {
+    if (!done) return;
+    const entry = getDayEntry(dateStr);
+    if (!entry) return;
+    const allQs = [...PREDEFINED_QUESTIONS, ...getCustomQuestions()];
+    const mapped = entry.answers.map(a => {
+      const q = allQs.find(qq => qq.id === a.questionId);
+      return { emoji: q?.emoji || '📝', text: q?.text || a.questionId, value: a.value };
+    });
+    setDayAnswers(mapped);
+    setSelectedDay(dateStr);
+  };
+
   const hasUnanswered = answeredToday < totalQuestions && totalQuestions > 0;
+  const unansweredCount = totalQuestions - answeredToday;
+
+  // Dynamic hook message
+  const getHookMessage = () => {
+    if (checkedIn) return null;
+    if (answeredToday > 0 && hasUnanswered) {
+      return (t('hook.continueCheckin') as string).replace('{n}', String(unansweredCount));
+    }
+    if (streak > 1) {
+      return (t('hook.streak') as string).replace('{n}', String(streak));
+    }
+    if (totalQuestions > 0) {
+      return t('hook.noCheckin');
+    }
+    return null;
+  };
+
+  const hookMessage = getHookMessage();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -85,7 +121,12 @@ const Index = () => {
             {new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })}
           </h2>
 
-          <div className="mt-6 flex flex-col items-center">
+          {/* Hook message */}
+          {hookMessage && (
+            <p className="text-primary-foreground/90 text-sm font-medium mt-2 animate-fade-in">{hookMessage}</p>
+          )}
+
+          <div className="mt-5 flex flex-col items-center">
             {checkedIn ? (
               <>
                 <div className="w-16 h-16 rounded-full border-[3px] border-primary-foreground/40 flex items-center justify-center bg-primary-foreground/10">
@@ -98,7 +139,7 @@ const Index = () => {
               <>
                 <button
                   onClick={() => navigate('/checkin')}
-                  className="w-16 h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors active:scale-95"
+                  className="w-16 h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-all active:scale-95 hover:scale-105"
                 >
                   <span className="text-3xl">▶</span>
                 </button>
@@ -124,21 +165,24 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Week view with colors */}
       <div className="px-5 mt-5">
         <div className="bg-card rounded-2xl shadow-card p-4">
           <h3 className="font-semibold text-foreground mb-3">{t('thisWeek')}</h3>
           <div className="grid grid-cols-7 gap-1">
             {weekData.map((d, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5">
+              <div key={i} className="flex flex-col items-center gap-1.5 cursor-pointer" onClick={() => handleDayClick(d.dateStr, d.done)}>
                 <span className={`text-xs font-medium ${d.isToday ? 'text-primary' : 'text-muted-foreground'}`}>{d.day}</span>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm ${
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm transition-all ${
                   d.done
                     ? 'bg-primary text-primary-foreground'
                     : d.isToday
                     ? 'border-2 border-primary text-primary font-bold'
+                    : d.isPast && !d.done
+                    ? 'bg-destructive/15 text-destructive'
                     : 'bg-secondary text-muted-foreground'
                 }`}>
-                  {d.done ? <Check className="w-4 h-4" /> : '—'}
+                  {d.done ? <Check className="w-4 h-4" /> : d.isPast ? <X className="w-3 h-3" /> : '—'}
                 </div>
                 <span className={`text-xs ${d.isToday ? 'text-primary font-bold' : 'text-muted-foreground'}`}>{d.date}</span>
               </div>
@@ -146,6 +190,33 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Day detail popup */}
+      {selectedDay && (
+        <div className="px-5 mt-3 animate-fade-in">
+          <div className="bg-card rounded-xl shadow-card p-4 border border-border/50">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold text-foreground">
+                {new Date(selectedDay).toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'short' })}
+              </p>
+              <button onClick={() => setSelectedDay(null)} className="p-1 rounded hover:bg-secondary">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="space-y-1.5">
+              {dayAnswers.map((a, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <span>{a.emoji}</span>
+                  <span className="text-muted-foreground flex-1 truncate">{a.text}</span>
+                  <span className="font-medium text-foreground">
+                    {typeof a.value === 'boolean' ? (a.value ? '✅' : '❌') : a.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="px-5 mt-4 pb-8 grid grid-cols-2 gap-3">
         <div className="bg-card rounded-2xl shadow-card p-4 text-center">
