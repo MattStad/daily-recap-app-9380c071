@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, Settings, Check, Flame } from 'lucide-react';
+import { BarChart3, Settings, Check, Flame, ListChecks } from 'lucide-react';
 import { getUserQuestions, getDayEntry, getTodayString, getCustomQuestions, getStreak, getTotalCheckIns, getAllEntries } from '@/lib/store';
 import { PREDEFINED_QUESTIONS } from '@/lib/questions';
 import { useI18n } from '@/lib/i18n';
@@ -59,6 +59,9 @@ const Index = () => {
           <p className="text-sm text-muted-foreground">{t('app.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/manage')} className="p-2.5 rounded-xl hover:bg-secondary transition-colors">
+            <ListChecks className="w-5 h-5 text-muted-foreground" />
+          </button>
           <button onClick={() => navigate('/statistics')} className="p-2.5 rounded-xl hover:bg-secondary transition-colors">
             <BarChart3 className="w-5 h-5 text-muted-foreground" />
           </button>
