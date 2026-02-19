@@ -146,6 +146,19 @@ const translations = {
     'day.fr': 'Fr',
     'day.sa': 'Sa',
     'day.so': 'So',
+
+    // Onboarding
+    'onboarding.welcome.title': 'Willkommen bei Daily Recap!',
+    'onboarding.welcome.desc': 'Dein persönlicher Begleiter für tägliche Selbstreflexion. Behalte deine Gewohnheiten im Blick und wachse jeden Tag ein Stück.',
+    'onboarding.checkin.title': 'Täglicher Check-in',
+    'onboarding.checkin.desc': 'Beantworte jeden Tag deine Fragen in unter 60 Sekunden. Baue Streaks auf und bleib motiviert.',
+    'onboarding.questions.title': 'Deine Fragen',
+    'onboarding.questions.desc': 'Wähle aus der Bibliothek, erstelle eigene Fragen oder nutze fertige Vorlagen-Packs.',
+    'onboarding.stats.title': 'Statistiken & Trends',
+    'onboarding.stats.desc': 'Verfolge deinen Fortschritt mit Diagrammen und erhalte automatische Insights.',
+    'onboarding.settings.title': 'Einstellungen',
+    'onboarding.settings.desc': 'Sprache, Theme und Erinnerungszeit – passe alles nach deinen Wünschen an.',
+    'onboarding.start': 'Los geht\'s! 🚀',
   },
   en: {
     'app.title': 'Daily Recap',
@@ -278,6 +291,19 @@ const translations = {
     'day.fr': 'Fri',
     'day.sa': 'Sat',
     'day.so': 'Sun',
+
+    // Onboarding
+    'onboarding.welcome.title': 'Welcome to Daily Recap!',
+    'onboarding.welcome.desc': 'Your personal companion for daily self-reflection. Track your habits and grow a little every day.',
+    'onboarding.checkin.title': 'Daily Check-in',
+    'onboarding.checkin.desc': 'Answer your questions every day in under 60 seconds. Build streaks and stay motivated.',
+    'onboarding.questions.title': 'Your Questions',
+    'onboarding.questions.desc': 'Choose from the library, create custom questions, or use ready-made template packs.',
+    'onboarding.stats.title': 'Statistics & Trends',
+    'onboarding.stats.desc': 'Track your progress with charts and get automatic insights.',
+    'onboarding.settings.title': 'Settings',
+    'onboarding.settings.desc': 'Language, theme, and reminder time – customize everything to your needs.',
+    'onboarding.start': 'Let\'s go! 🚀',
   },
 } as const;
 
