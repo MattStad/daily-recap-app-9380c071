@@ -10,6 +10,7 @@ import Statistics from "./pages/Statistics";
 import ManageQuestions from "./pages/ManageQuestions";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import OnboardingTour from "./components/OnboardingTour";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
       <I18nProvider>
         <Toaster />
         <Sonner />
+        <OnboardingTour />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

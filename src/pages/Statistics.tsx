@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flame, Calendar, TrendingUp, Target, Clock, TrendingDown, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Flame, CalendarCheck, Trophy, Percent, TrendingUp, TrendingDown, Lightbulb, BarChart3, LineChart as LineChartIcon } from 'lucide-react';
 import { Question, PREDEFINED_QUESTIONS } from '@/lib/questions';
 import { useI18n } from '@/lib/i18n';
 import {
@@ -11,8 +11,6 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell,
 } from 'recharts';
-
-const CHART_COLORS = ['hsl(174, 62%, 32%)', 'hsl(38, 92%, 50%)', 'hsl(152, 60%, 42%)', 'hsl(280, 60%, 55%)', 'hsl(350, 65%, 55%)'];
 
 const Statistics = () => {
   const navigate = useNavigate();
@@ -36,7 +34,6 @@ const Statistics = () => {
     return Math.round((count / 30) * 100);
   }, []);
 
-  // Weekly rate insight
   const weeklyInsight = useMemo(() => {
     const entries = getAllEntries();
     const today = new Date();
@@ -54,7 +51,6 @@ const Statistics = () => {
     return { done: count, total: daysElapsed };
   }, []);
 
-  // Trend insights
   const trendInsights = useMemo(() => {
     const insights: { text: string; type: 'up' | 'down' }[] = [];
     userQuestions.forEach(uq => {
@@ -65,9 +61,7 @@ const Statistics = () => {
       const recent = answers.slice(-5);
       let trend = 0;
       for (let i = 1; i < recent.length; i++) {
-        const curr = Number(recent[i].value);
-        const prev = Number(recent[i - 1].value);
-        trend += curr - prev;
+        trend += Number(recent[i].value) - Number(recent[i - 1].value);
       }
       if (Math.abs(trend) >= 2) {
         const name = tQuestion(q.id, q.text).substring(0, 30);
@@ -111,42 +105,54 @@ const Statistics = () => {
         </div>
       </div>
 
+      {/* Streak banner */}
       <div className="px-5 mb-4">
-        <div className="gradient-accent rounded-2xl p-5 text-center">
-          <p className="text-accent-foreground/80 text-sm font-medium">{t('currentStreak')}</p>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <div className="bg-accent-foreground/20 rounded-full p-2"><Flame className="w-5 h-5 text-accent-foreground" /></div>
-            <span className="text-3xl font-bold text-accent-foreground">{streak}</span>
+        <div className="gradient-primary rounded-2xl p-5 text-center">
+          <p className="text-primary-foreground/80 text-xs font-medium uppercase tracking-wider">{t('currentStreak')}</p>
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <div className="bg-primary-foreground/20 rounded-full p-2.5">
+              <Flame className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <span className="text-4xl font-bold text-primary-foreground">{streak}</span>
           </div>
-          <p className="text-accent-foreground/80 text-sm mt-1">{streakMessage}</p>
+          <p className="text-primary-foreground/70 text-sm mt-2">{streakMessage}</p>
         </div>
       </div>
 
-      <div className="px-5 grid grid-cols-3 gap-2 mb-4">
-        <div className="bg-card rounded-xl shadow-card p-3 text-center">
-          <Calendar className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
+      {/* Stat cards */}
+      <div className="px-5 grid grid-cols-3 gap-2.5 mb-4">
+        <div className="bg-card rounded-2xl shadow-card p-3.5 text-center">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
+            <CalendarCheck className="w-4.5 h-4.5 text-primary" />
+          </div>
           <p className="text-xl font-bold text-foreground">{totalCheckIns}</p>
-          <p className="text-[10px] text-muted-foreground">{t('checkins')}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('checkins')}</p>
         </div>
-        <div className="bg-card rounded-xl shadow-card p-3 text-center">
-          <TrendingUp className="w-5 h-5 text-primary mx-auto mb-1" />
+        <div className="bg-card rounded-2xl shadow-card p-3.5 text-center">
+          <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center mx-auto mb-2">
+            <Trophy className="w-4.5 h-4.5 text-accent" />
+          </div>
           <p className="text-xl font-bold text-foreground">{bestStreak}</p>
-          <p className="text-[10px] text-muted-foreground">{t('bestStreak')}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('bestStreak')}</p>
         </div>
-        <div className="bg-card rounded-xl shadow-card p-3 text-center">
-          <Target className="w-5 h-5 text-primary mx-auto mb-1" />
+        <div className="bg-card rounded-2xl shadow-card p-3.5 text-center">
+          <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center mx-auto mb-2">
+            <Percent className="w-4.5 h-4.5 text-success" />
+          </div>
           <p className="text-xl font-bold text-foreground">{thirtyDayRate}%</p>
-          <p className="text-[10px] text-muted-foreground">{t('thirtyDayRate')}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('thirtyDayRate')}</p>
         </div>
       </div>
 
       {/* Insights */}
       {(trendInsights.length > 0 || weeklyInsight.done > 0) && (
-        <div className="px-5 mb-4 space-y-2">
-          <div className="bg-card rounded-xl shadow-card p-3.5 flex items-start gap-3 border border-border/50">
-            <Lightbulb className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-sm text-foreground">
+        <div className="px-5 mb-4">
+          <div className="bg-card rounded-2xl shadow-card p-4 flex items-start gap-3 border border-border/50">
+            <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-4.5 h-4.5 text-accent" />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-foreground">
                 {(t('insight.weeklyRate') as string).replace('{n}', String(weeklyInsight.done)).replace('{total}', String(weeklyInsight.total))}
               </p>
               {trendInsights.map((ins, i) => (
@@ -160,13 +166,21 @@ const Statistics = () => {
         </div>
       )}
 
+      {/* Question trends */}
       <div className="px-5 pb-8">
         <h2 className="text-lg font-bold text-foreground mb-3">{t('trends')}</h2>
         <div className="space-y-3">
           {activeQuestions.map(({ question, config }) => (
             <QuestionStats key={question.id} question={question} chartType={config.chartType || 'line'} onToggleChart={() => toggleChartType(question.id)} tQuestion={tQuestion} dateLocale={dateLocale} t={t} />
           ))}
-          {activeQuestions.length === 0 && <div className="text-center py-8 text-muted-foreground text-sm">{t('noQuestionsSelected')}</div>}
+          {activeQuestions.length === 0 && (
+            <div className="bg-card rounded-2xl shadow-card p-8 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+                <BarChart3 className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground text-sm">{t('noQuestionsSelected')}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -180,15 +194,15 @@ function QuestionStats({ question, chartType, onToggleChart, tQuestion, dateLoca
   const answers = getAnswersForQuestion(question.id);
   const hasData = answers.length > 0;
   return (
-    <div className="bg-card rounded-xl shadow-card p-4 animate-fade-in">
+    <div className="bg-card rounded-2xl shadow-card p-4 animate-fade-in">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <span className="text-xl">{question.emoji || '📝'}</span>
           <p className="text-sm font-semibold text-foreground truncate">{tQuestion(question.id, question.text)}</p>
         </div>
-        {question.type !== 'freetext' && (
-          <button onClick={onToggleChart} className="p-2 rounded-lg hover:bg-secondary transition-colors ml-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
+        {question.type !== 'freetext' && hasData && (
+          <button onClick={onToggleChart} className="p-2 rounded-lg hover:bg-secondary transition-colors ml-2" title={chartType === 'line' ? 'Bar chart' : 'Line chart'}>
+            {chartType === 'line' ? <BarChart3 className="w-4 h-4 text-muted-foreground" /> : <LineChartIcon className="w-4 h-4 text-muted-foreground" />}
           </button>
         )}
       </div>
@@ -210,7 +224,6 @@ function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: st
   const noCount = answers.filter(a => a.value === false).length;
 
   if (chartType === 'pie') {
-    // Completion rate bar instead of pie
     const total = yesCount + noCount;
     const rate = total > 0 ? Math.round((yesCount / total) * 100) : 0;
     return (
@@ -221,7 +234,7 @@ function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: st
           <span className="text-muted-foreground">{t('no')}: {noCount}</span>
         </div>
         <div className="h-3 bg-secondary rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${rate}%`, background: CHART_COLORS[0] }} />
+          <div className="h-full rounded-full transition-all duration-500 bg-primary" style={{ width: `${rate}%` }} />
         </div>
       </div>
     );
@@ -242,7 +255,7 @@ function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: st
           <Tooltip formatter={(v: number) => v === 1 ? t('yes') : t('no')} />
           <Bar dataKey="value" radius={[4, 4, 0, 0]}>
             {barData.map((entry, i) => (
-              <Cell key={i} fill={entry.value === 1 ? CHART_COLORS[0] : CHART_COLORS[4]} />
+              <Cell key={i} fill={entry.value === 1 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
             ))}
           </Bar>
         </BarChart>
@@ -253,7 +266,6 @@ function YesNoChart({ answers, chartType, dateLocale, t }: { answers: { date: st
 
 function ScaleChart({ answers, chartType, min, max, dateLocale }: { answers: { date: string; value: any }[]; chartType: 'line' | 'pie'; min: number; max: number; dateLocale: string }) {
   if (chartType === 'pie') {
-    // Weekly average bar chart instead
     const weeklyData: Record<string, { sum: number; count: number }> = {};
     answers.forEach(a => {
       const d = new Date(a.date);
@@ -277,7 +289,7 @@ function ScaleChart({ answers, chartType, min, max, dateLocale }: { answers: { d
             <XAxis dataKey="week" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
             <YAxis domain={[min, max]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
             <Tooltip />
-            <Bar dataKey="avg" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="avg" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -297,7 +309,7 @@ function ScaleChart({ answers, chartType, min, max, dateLocale }: { answers: { d
           <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
           <YAxis domain={[min, max]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
           <Tooltip />
-          <Line type="monotone" dataKey="value" stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ fill: CHART_COLORS[0], r: 3 }} />
+          <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: 'hsl(var(--primary))', r: 3, strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 0 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -315,7 +327,7 @@ function FreeTextStats({ answers, dateLocale, t }: { answers: { date: string; va
           <p className="text-xs font-semibold text-muted-foreground mb-2">{t('topWords')}</p>
           <div className="flex flex-wrap gap-1.5">
             {topWords.map(([word, count]) => (
-              <span key={word} className="px-2 py-0.5 rounded-md text-xs font-medium bg-primary/10 text-primary">{word} ({count})</span>
+              <span key={word} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary">{word} ({count})</span>
             ))}
           </div>
         </div>
