@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { t, dateLocale } = useI18n();
+  const { t, dateLocale, tQuestion } = useI18n();
   const [checkedIn, setCheckedIn] = useState(false);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [answeredToday, setAnsweredToday] = useState(0);
@@ -61,7 +61,7 @@ const Index = () => {
     const allQs = [...PREDEFINED_QUESTIONS, ...getCustomQuestions()];
     const mapped = entry.answers.map(a => {
       const q = allQs.find(qq => qq.id === a.questionId);
-      return { emoji: q?.emoji || '📝', text: q?.text || a.questionId, value: a.value };
+      return { emoji: q?.emoji || '📝', text: q ? tQuestion(q.id, q.text) : a.questionId, value: a.value };
     });
     setDayAnswers(mapped);
     setSelectedDay(dateStr);
