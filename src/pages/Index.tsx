@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, Settings, Check, Flame, ListChecks, X } from 'lucide-react';
-import { getUserQuestions, getDayEntry, getTodayString, getCustomQuestions, getStreak, getTotalCheckIns, getAllEntries } from '@/lib/store';
+import { BarChart3, Settings, Check, Flame, ListChecks, X, Lightbulb, TrendingUp, Calendar } from 'lucide-react';
+import { getUserQuestions, getDayEntry, getTodayString, getCustomQuestions, getStreak, getTotalCheckIns, getAllEntries, getBestStreak } from '@/lib/store';
 import { PREDEFINED_QUESTIONS, Question } from '@/lib/questions';
 import { useI18n } from '@/lib/i18n';
 
@@ -70,7 +70,6 @@ const Index = () => {
   const hasUnanswered = answeredToday < totalQuestions && totalQuestions > 0;
   const unansweredCount = totalQuestions - answeredToday;
 
-  // Dynamic hook message
   const getHookMessage = () => {
     if (checkedIn) return null;
     if (answeredToday > 0 && hasUnanswered) {
@@ -86,6 +85,52 @@ const Index = () => {
   };
 
   const hookMessage = getHookMessage();
+
+  // Daily tip based on day of year
+  const dailyTip = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const tipIndex = (dayOfYear % 7) + 1;
+    return t(`home.tip.${tipIndex}` as any);
+  }, [t]);
+
+  // Completion rate since start
+  const completionRate = useMemo(() => {
+    const entries = getAllEntries();
+    if (entries.length === 0) return 0;
+    const dates = entries.map(e => new Date(e.date).getTime());
+    const firstDate = new Date(Math.min(...dates));
+    const today = new Date();
+    const totalDays = Math.max(1, Math.floor((today.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    return Math.round((entries.length / totalDays) * 100);
+  }, []);
+
+  // Recent activity (last 3 entries)
+  const recentActivity = useMemo(() => {
+    const entries = getAllEntries().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+    const todayStr = getTodayString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    return entries.map(e => {
+      let label: string;
+      if (e.date === todayStr) {
+        label = t('home.today');
+      } else if (e.date === yesterdayStr) {
+        label = t('home.yesterday');
+      } else {
+        const diff = Math.floor((Date.now() - new Date(e.date).getTime()) / 86400000);
+        label = (t('home.daysAgo') as string).replace('{n}', String(diff));
+      }
+      return {
+        date: e.date,
+        label,
+        count: e.answers.length,
+      };
+    });
+  }, [t]);
+
+  const bestStreak = getBestStreak();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -107,6 +152,7 @@ const Index = () => {
         </div>
       </div>
 
+      {/* Hero card */}
       <div className="px-5 pt-2">
         <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, hsl(174 62% 32%), hsl(174 62% 42%))' }}>
           {streak > 0 && (
@@ -121,7 +167,6 @@ const Index = () => {
             {new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })}
           </h2>
 
-          {/* Hook message */}
           {hookMessage && (
             <p className="text-primary-foreground/90 text-sm font-medium mt-2 animate-fade-in">{hookMessage}</p>
           )}
@@ -165,8 +210,33 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Week view with colors */}
-      <div className="px-5 mt-5">
+      {/* Stats row */}
+      <div className="px-5 mt-4 grid grid-cols-3 gap-3">
+        <div className="bg-card rounded-2xl shadow-card p-3 text-center">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
+            <Calendar className="w-4 h-4 text-primary" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{totalCheckIns}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('totalCheckins')}</p>
+        </div>
+        <div className="bg-card rounded-2xl shadow-card p-3 text-center">
+          <div className="w-8 h-8 rounded-xl bg-accent/15 flex items-center justify-center mx-auto mb-1.5">
+            <Flame className="w-4 h-4 text-accent" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{bestStreak}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('bestStreak')}</p>
+        </div>
+        <div className="bg-card rounded-2xl shadow-card p-3 text-center">
+          <div className="w-8 h-8 rounded-xl bg-success/15 flex items-center justify-center mx-auto mb-1.5">
+            <TrendingUp className="w-4 h-4 text-success" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{completionRate}%</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t('home.completionAllTime')}</p>
+        </div>
+      </div>
+
+      {/* Week view */}
+      <div className="px-5 mt-4">
         <div className="bg-card rounded-2xl shadow-card p-4">
           <h3 className="font-semibold text-foreground mb-3">{t('thisWeek')}</h3>
           <div className="grid grid-cols-7 gap-1">
@@ -218,14 +288,42 @@ const Index = () => {
         </div>
       )}
 
-      <div className="px-5 mt-4 pb-8 grid grid-cols-2 gap-3">
-        <div className="bg-card rounded-2xl shadow-card p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">{t('totalCheckins')}</p>
-          <p className="text-3xl font-bold text-foreground">{totalCheckIns}</p>
+      {/* Daily tip */}
+      <div className="px-5 mt-4">
+        <div className="bg-card rounded-2xl shadow-card p-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Lightbulb className="w-4.5 h-4.5 text-accent" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-foreground mb-0.5">{t('home.dailyTip')}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{dailyTip}</p>
+          </div>
         </div>
-        <div className="bg-card rounded-2xl shadow-card p-4 text-center">
-          <p className="text-xs text-muted-foreground mb-1">{t('activeQuestions')}</p>
-          <p className="text-3xl font-bold text-foreground">{totalQuestions}</p>
+      </div>
+
+      {/* Recent activity */}
+      <div className="px-5 mt-4 pb-8">
+        <div className="bg-card rounded-2xl shadow-card p-4">
+          <h3 className="font-semibold text-foreground mb-3">{t('home.recentActivity')}</h3>
+          {recentActivity.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('home.noActivity')}</p>
+          ) : (
+            <div className="space-y-2.5">
+              {recentActivity.map((entry, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      {(t('home.questionsAnswered') as string).replace('{n}', String(entry.count))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{entry.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
