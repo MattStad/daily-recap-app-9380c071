@@ -477,10 +477,10 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
 
   const levelColors = [
     'bg-secondary', // 0 - no entry
-    'bg-primary/20',
-    'bg-primary/40',
-    'bg-primary/65',
-    'bg-primary',
+    'bg-red-500/80', // low score
+    'bg-orange-400/80',
+    'bg-amber-300/80',
+    'bg-emerald-500/80', // high score
   ];
 
   return (
