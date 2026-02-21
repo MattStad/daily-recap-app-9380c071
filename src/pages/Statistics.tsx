@@ -368,11 +368,31 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
   onSelectDay: (day: string | null) => void;
 }) {
   const entries = useMemo(() => getAllEntries(), []);
+  // Map date -> day score (0-100) based on answer quality, not just count
   const entryMap = useMemo(() => {
     const map: Record<string, number> = {};
-    entries.forEach(e => { map[e.date] = e.answers.length; });
+    entries.forEach(e => {
+      if (e.answers.length === 0) return;
+      let scoreSum = 0;
+      let scoreCount = 0;
+      e.answers.forEach(a => {
+        const q = allQuestions.find(qq => qq.id === a.questionId);
+        if (!q) return;
+        if (q.type === 'scale') {
+          const max = q.scaleMax || 10;
+          const min = q.scaleMin || 1;
+          scoreSum += (Number(a.value) - min) / (max - min);
+          scoreCount++;
+        } else if (q.type === 'yesno') {
+          scoreSum += a.value === true ? 1 : 0;
+          scoreCount++;
+        }
+      });
+      // If no scoreable questions, use completion as fallback (50%)
+      map[e.date] = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 100) : 50;
+    });
     return map;
-  }, [entries]);
+  }, [entries, allQuestions]);
 
   // Build 16 weeks (112 days) of data
   const { weeks, months } = useMemo(() => {
@@ -389,7 +409,6 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
     const startDate = new Date(currentMonday);
     startDate.setDate(currentMonday.getDate() - (totalWeeks - 1) * 7);
 
-    const maxAnswers = Math.max(1, ...Object.values(entryMap));
     const weeks: { dateStr: string; level: number; date: Date }[][] = [];
     const monthLabels: { label: string; col: number }[] = [];
     let lastMonth = -1;
@@ -400,9 +419,9 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + w * 7 + d);
         const dateStr = date.toISOString().split('T')[0];
-        const count = entryMap[dateStr] || 0;
+        const score = entryMap[dateStr];
         const isFuture = date > today;
-        const level = isFuture ? -1 : count === 0 ? 0 : Math.min(4, Math.ceil((count / maxAnswers) * 4));
+        const level = isFuture ? -1 : score === undefined ? 0 : score >= 80 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : 1;
         week.push({ dateStr, level, date });
 
         if (d === 0 && date.getMonth() !== lastMonth) {
@@ -503,7 +522,7 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
                   onClick={() => {
                     if (day.level > 0) onSelectDay(selectedDay === day.dateStr ? null : day.dateStr);
                   }}
-                  title={`${day.dateStr}: ${entryMap[day.dateStr] || 0}`}
+                  title={`${day.dateStr}: ${entryMap[day.dateStr] !== undefined ? entryMap[day.dateStr] + '%' : '-'}`}
                 />
               ))}
             </div>
