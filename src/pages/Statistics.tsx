@@ -500,7 +500,7 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
       </div>
 
       {/* Heatmap grid */}
-      <div className="flex gap-0.5">
+      <div className="flex gap-0.5 justify-center">
         {/* Day labels */}
         <div className="flex flex-col gap-[3px] mr-1 justify-start">
           {['M', '', 'W', '', 'F', '', ''].map((d, i) => (
