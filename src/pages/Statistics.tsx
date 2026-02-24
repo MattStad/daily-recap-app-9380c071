@@ -488,12 +488,12 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
       <h3 className="font-semibold text-foreground mb-3">{t('heatmap.title')}</h3>
 
       {/* Month labels */}
-      <div className="flex gap-[3px] mb-1 ml-6">
+      <div className="flex gap-[3px] mb-1 ml-8">
         {weeks.map((_, wi) => {
           const ml = months.find(m => m.col === wi);
           return (
-            <div key={wi} className="w-3 text-center">
-              {ml && <span className="text-[9px] text-muted-foreground">{ml.label}</span>}
+            <div key={wi} className="w-[18px] text-center">
+              {ml && <span className="text-[10px] text-muted-foreground">{ml.label}</span>}
             </div>
           );
         })}
@@ -503,9 +503,9 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
       <div className="flex gap-0.5 justify-center">
         {/* Day labels */}
         <div className="flex flex-col gap-[3px] mr-1 justify-start">
-          {['M', '', 'W', '', 'F', '', ''].map((d, i) => (
-            <div key={i} className="w-4 h-3 flex items-center justify-center">
-              <span className="text-[8px] text-muted-foreground">{d}</span>
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((d, i) => (
+            <div key={i} className="w-6 h-[18px] flex items-center justify-end pr-1">
+              <span className="text-[10px] text-muted-foreground">{d}</span>
             </div>
           ))}
         </div>
@@ -516,7 +516,7 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
               {week.map((day, di) => (
                 <div
                   key={di}
-                  className={`w-3 h-3 rounded-[2px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/30 ${
+                  className={`w-[18px] h-[18px] rounded-[3px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/30 ${
                     day.level === -1 ? 'bg-transparent' : levelColors[day.level]
                   } ${selectedDay === day.dateStr ? 'ring-2 ring-foreground/60' : ''}`}
                   onClick={() => {
