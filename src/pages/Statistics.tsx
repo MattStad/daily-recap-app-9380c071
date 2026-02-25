@@ -483,50 +483,57 @@ function HeatmapCalendar({ t, tQuestion, dateLocale, allQuestions, userQuestions
     'bg-emerald-500/80', // high score
   ];
 
+  const tileSize = 'min(calc((100vw - 6rem) / ' + weeks.length + '), 18px)';
+
   return (
-    <div className="bg-card rounded-2xl shadow-card p-4">
+    <div className="bg-card rounded-2xl shadow-card p-4 overflow-x-auto">
       <h3 className="font-semibold text-foreground mb-3">{t('heatmap.title')}</h3>
 
-      {/* Month labels */}
-      <div className="flex gap-[3px] mb-1 ml-8">
-        {weeks.map((_, wi) => {
-          const ml = months.find(m => m.col === wi);
-          return (
-            <div key={wi} className="w-[18px] text-center">
-              {ml && <span className="text-[10px] text-muted-foreground">{ml.label}</span>}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Heatmap grid */}
-      <div className="flex gap-0.5 justify-center">
-        {/* Day labels */}
-        <div className="flex flex-col gap-[3px] mr-1 justify-start">
-          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((d, i) => (
-            <div key={i} className="w-6 h-[18px] flex items-center justify-end pr-1">
-              <span className="text-[10px] text-muted-foreground">{d}</span>
-            </div>
-          ))}
+      <div className="inline-flex flex-col items-start w-full">
+        {/* Month labels row */}
+        <div className="flex mb-1" style={{ paddingLeft: '2rem' }}>
+          <div className="flex" style={{ gap: '3px' }}>
+            {weeks.map((_, wi) => {
+              const ml = months.find(m => m.col === wi);
+              return (
+                <div key={wi} style={{ width: tileSize }} className="text-left">
+                  {ml && <span className="text-[10px] text-muted-foreground whitespace-nowrap">{ml.label}</span>}
+                </div>
+              );
+            })}
+          </div>
         </div>
-        
-        <div className="flex gap-[3px]">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex flex-col gap-[3px]">
-              {week.map((day, di) => (
-                <div
-                  key={di}
-                  className={`w-[18px] h-[18px] rounded-[3px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/30 ${
-                    day.level === -1 ? 'bg-transparent' : levelColors[day.level]
-                  } ${selectedDay === day.dateStr ? 'ring-2 ring-foreground/60' : ''}`}
-                  onClick={() => {
-                    if (day.level > 0) onSelectDay(selectedDay === day.dateStr ? null : day.dateStr);
-                  }}
-                  title={`${day.dateStr}: ${entryMap[day.dateStr] !== undefined ? entryMap[day.dateStr] + '%' : '-'}`}
-                />
-              ))}
-            </div>
-          ))}
+
+        {/* Grid with day labels */}
+        <div className="flex">
+          {/* Day labels */}
+          <div className="flex flex-col mr-1 justify-start" style={{ gap: '3px' }}>
+            {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((d, i) => (
+              <div key={i} className="flex items-center justify-end pr-0.5" style={{ width: '1.75rem', height: tileSize }}>
+                <span className="text-[10px] text-muted-foreground">{d}</span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex" style={{ gap: '3px' }}>
+            {weeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col" style={{ gap: '3px' }}>
+                {week.map((day, di) => (
+                  <div
+                    key={di}
+                    style={{ width: tileSize, height: tileSize }}
+                    className={`rounded-[3px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/30 ${
+                      day.level === -1 ? 'bg-transparent' : levelColors[day.level]
+                    } ${selectedDay === day.dateStr ? 'ring-2 ring-foreground/60' : ''}`}
+                    onClick={() => {
+                      if (day.level > 0) onSelectDay(selectedDay === day.dateStr ? null : day.dateStr);
+                    }}
+                    title={`${day.dateStr}: ${entryMap[day.dateStr] !== undefined ? entryMap[day.dateStr] + '%' : '-'}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
